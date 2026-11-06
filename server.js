@@ -4,7 +4,6 @@ const { MongoClient } = require('mongodb');
 const app = express();
 app.use(express.json());
 
-// السماح بالاتصال الخارجي (CORS)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -13,22 +12,33 @@ app.use((req, res, next) => {
   next();
 });
 
-// 🔗 رابط الاتصال المحدث مع تجاوز قيود الـ SSL الصارمة
-const uri = "mongodb+srv://hosnisimhicham_db_user:Hosni12345@testdb.oxke66p.mongodb.net/?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true";
-const client = new MongoClient(uri);
+const uri = "mongodb+srv://hosnisimhicham_db_user:Hosni12345@testdb.oxke66p.mongodb.net/?retryWrites=true&w=majority";
+
+const client = new MongoClient(uri, {
+  tls: true,
+  tlsAllowInvalidCertificates: true,
+  tlsAllowInvalidHostnames: true
+});
 
 let db;
 
-async function startServer() {
-  try {
-    await client.connect();
-    db = client.db("TestDB");
-    console.log("✅ متصل بنجاح مع MongoDB Atlas!");
-  } catch (e) {
-    console.error("❌ خطأ في الاتصال بقاعدة البيانات:", e.message);
+// دالة اتصال ذكية تضمن الاتصال الفوري عند الحاجة
+async function connectDB() {
+  if (!db) {
+    try {
+      await client.connect();
+      db = client.db("TestDB");
+      console.log("✅ متصل بنجاح مع MongoDB Atlas!");
+    } catch (e) {
+      console.error("❌ خطأ في الاتصال بقاعدة البيانات:", e.message);
+      throw e;
+    }
   }
+  return db;
 }
-startServer();
+
+// محاولة الاتصال الأولية عند الإقلاع
+connectDB().catch(() => {});
 
 app.get('/', (req, res) => {
   res.send('🚀 محرك Node.js وقاعدة بيانات MongoDB يعملان بنجاح تام!');
@@ -36,14 +46,13 @@ app.get('/', (req, res) => {
 
 app.post('/api/send', async (req, res) => {
   try {
-    if (!db) {
-      return res.status(500).json({ success: false, error: "قاعدة البيانات غير متصلة حالياً." });
-    }
+    // ضمان الاتصال بقاعدة البيانات حتى لو تأخر السيرفر في الإقلاع
+    const database = await connectDB();
 
     const dataToSend = req.body;
     dataToSend.timestamp = new Date();
 
-    const collection = db.collection('messages');
+    const collection = database.collection('messages');
     const result = await collection.insertOne(dataToSend);
 
     res.json({
@@ -53,7 +62,7 @@ app.post('/api/send', async (req, res) => {
       receivedData: dataToSend
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: "تعذر الاتصال بقاعدة البيانات حالياً: " + error.message });
   }
 });
 
