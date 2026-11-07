@@ -16,7 +16,7 @@ app.use((req, res, next) => {
 
 // مسار تجريبي للتأكد أن السيرفر يعمل
 app.get('/', (req, res) => {
-    res.send('Server is running and connected to Google Sheets successfully!');
+    res.send('Server is running and connected to Google Sheets successfully!2');
 });
 
 // مسار استقبال البيانات والكتابة في الشيت مباشرة
