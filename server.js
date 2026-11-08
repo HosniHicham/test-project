@@ -61,18 +61,50 @@ app.get('/api/get-ideas', async (req, res) => {
     }
 });
 
-// مسار حذف عقار بناءً على الـ ID
+// مسار حذف عقار مع حذف الملف المرتبط به من Supabase Storage تلقائياً
 app.delete('/api/delete-idea/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { error } = await supabase
+
+        // 1. جلب بيانات العقار أولاً لمعرفة رابط الملف (صورة أو فيديو)
+        const { data: itemData, error: fetchError } = await supabase
+            .from('test_messages')
+            .select('image_url, video_url')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) {
+            return res.status(404).json({ success: false, error: 'العقار غير موجود' });
+        }
+
+        // تحديد الرابط الموجود (سواء كان صورة أو فيديو)
+        const mediaUrl = itemData.image_url || itemData.video_url;
+
+        // 2. إذا كان هناك رابط ملف، نقوم باستخراج اسم الملف وحذفه من الـ Storage
+        if (mediaUrl) {
+            const urlParts = mediaUrl.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+
+            if (fileName) {
+                const { error: storageError } = await supabase.storage
+                    .from('test_media')
+                    .remove([fileName]);
+                
+                if (storageError) {
+                    console.error('خطأ في حذف الملف من الـ Storage:', storageError.message);
+                }
+            }
+        }
+
+        // 3. حذف السطر من قاعدة البيانات
+        const { error: dbError } = await supabase
             .from('test_messages')
             .delete()
             .eq('id', id);
 
-        if (error) return res.status(400).json({ success: false, error: error.message });
+        if (dbError) return res.status(400).json({ success: false, error: dbError.message });
 
-        res.json({ success: true, message: 'تم حذف العقار بنجاح!' });
+        res.json({ success: true, message: 'تم حذف العقار والملف المرتبط به بنجاح من التخزين!' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
