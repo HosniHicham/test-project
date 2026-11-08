@@ -1,14 +1,13 @@
 {
-  "name": "my-sheet-server",
+  "name": "dar-dz-server",
   "version": "1.0.0",
-  "description": "Node.js server to log data to Google Sheets",
+  "description": "Dar Dz Real Estate Server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "google-auth-library": "^9.0.0",
-    "google-spreadsheet": "^4.1.4"
+    "@supabase/supabase-js": "^2.39.0"
   }
 }
