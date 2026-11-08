@@ -1,57 +1,42 @@
+const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
-const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { JWT } = require('google-auth-library');
-
 const app = express();
+
 app.use(express.json());
 
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    if (req.method === 'OPTIONS') return res.sendStatus(204);
-    next();
-});
+// معلومات الاتصال الخاصة بك
+const SUPABASE_URL = 'https://jjrisfyotyryanhbsvlz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_t7kVxzmOtz16C95U_B52FA_AJl_WK-h';
 
-app.get('/', (req, res) => {
-    res.send('Server is running and connected to Google Sheets successfully!');
-});
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-app.post('/log', async (req, res) => {
+// نقطة نهاية (API Endpoint) لتجربة إضافة منزل أو عقار لقاعدة البيانات
+app.post('/api/add-property', async (req, res) => {
     try {
-        const { name, status } = req.body; 
+        const propertyData = {
+            title: req.body.title || 'شقة F3 مجهزة في حي الصنوبر',
+            price: req.body.price || 35000,
+            city: req.body.city || 'وهران',
+            type: req.body.type || 'كراء',
+            rooms: 3
+        };
 
-        // قراءة المفتاح من إعدادات البيئة في Render ومعالجة الأسطر بدقة
-        const privateKeyEnv = process.env.PRIVATE_KEY;
-        if (!privateKeyEnv) {
-            throw new Error("PRIVATE_KEY is missing in environment variables!");
+        const { data, error } = await supabase
+            .from('properties') // اسم الجدول في قاعدة البيانات
+            .insert([propertyData]);
+
+        if (error) {
+            return res.status(400).json({ success: false, message: error.message });
         }
-        const formattedKey = privateKeyEnv.replace(/\\n/g, '\n');
 
-        const serviceAccountAuth = new JWT({
-            email: "bot-hosni-531@mesheetserver-514010.iam.gserviceaccount.com",
-            key: formattedKey,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
-
-        const doc = new GoogleSpreadsheet('1vHEtlx2hWhyiK6xk3qgqFtvGipoxyvwZjUCUZISDA0c', serviceAccountAuth);
-        await doc.loadInfo();
-        
-        const sheet = doc.sheetsByIndex[0];
-        
-        await sheet.addRow({ 
-            "A": name || "زيارة من السيرفر السحابي", 
-            "Date": status || "ناجح تماماً" 
-        });
-
-        res.status(200).json({ success: true, message: "تمت الكتابة في الشيت من السيرفر السحابي بنجاح!" });
-    } catch (error) {
-        console.error("خطأ أثناء الكتابة:", error);
-        res.status(500).json({ success: false, error: error.message });
+        res.status(200).json({ success: true, message: 'تم إرسال العقار بنجاح إلى Supabase!', data });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Cloud Server is running on port ${PORT}`);
+// تشغيل السيرفر المحلي
+const PORT = process.ographystyle || 3000;
+app.listen(3000, () => {
+    console.log('🚀 السيرفر يشتغل بكفاءة على المنفذ 3000...');
 });
