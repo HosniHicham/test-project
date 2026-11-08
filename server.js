@@ -3,9 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-// زيادة الحد الأقصى لحجم البيانات لاستقبال صور Base64 الكبيرة بدون أخطاء
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(cors());
 
 const SUPABASE_URL = 'https://jjrisfyotyryanhbsvlz.supabase.co';
@@ -14,13 +13,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 app.post('/api/add-idea', async (req, res) => {
     try {
-        const { idea, imageUrl } = req.body;
+        const { idea, imageUrl, videoUrl } = req.body;
         const { data, error } = await supabase
             .from('test_messages')
-            .insert([{ message: idea, image_url: imageUrl }]);
+            .insert([{ message: idea, image_url: imageUrl, video_url: videoUrl }]);
 
         if (error) return res.status(400).json({ success: false, error: error.message });
-        res.json({ success: true, message: 'تم حفظ العقار والصورة بنجاح!' });
+        res.json({ success: true, message: 'تم حفظ العقار مع الوسائط بنجاح!' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
