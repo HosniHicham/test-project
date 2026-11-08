@@ -3,8 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
 const SUPABASE_URL = 'https://jjrisfyotyryanhbsvlz.supabase.co';
@@ -19,7 +19,7 @@ app.post('/api/add-idea', async (req, res) => {
             .insert([{ message: idea, image_url: imageUrl, video_url: videoUrl }]);
 
         if (error) return res.status(400).json({ success: false, error: error.message });
-        res.json({ success: true, message: 'تم حفظ العقار مع الوسائط بنجاح!' });
+        res.json({ success: true, message: 'تم حفظ العقار بنجاح!' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
