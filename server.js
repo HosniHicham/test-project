@@ -11,13 +11,13 @@ const SUPABASE_KEY = 'sb_publishable_t7kVxzmOtz16C95U_B52FA_AJl_WK-h';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 app.post('/api/add-idea', async (req, res) => {
-    const { idea } = req.body;
+    const { idea, imageUrl } = req.body;
     const { data, error } = await supabase
         .from('test_messages')
-        .insert([{ message: idea }]);
+        .insert([{ message: idea, image_url: imageUrl }]);
 
     if (error) return res.status(400).json({ success: false, error: error.message });
-    res.json({ success: true, message: 'تم حفظ الفكرة بنجاح!' });
+    res.json({ success: true, message: 'تم حفظ العقار والصورة بنجاح!' });
 });
 
 app.get('/api/get-ideas', async (req, res) => {
