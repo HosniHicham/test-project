@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage() }); // حفظ مؤقت في الذاكرة
+const upload = multer({ storage: multer.memoryStorage() });
 const app = express();
 
 app.use(cors());
@@ -44,7 +44,7 @@ app.post('/api/add-idea', upload.single('media'), async (req, res) => {
         if (dbError) return res.status(400).json({ success: false, error: dbError.message });
 
         res.json({ success: true, message: 'تم حفظ العقار بنجاح!' });
-    } elsif (err) {
+    } catch (err) { // تم تصحيحها من elsif إلى catch
         res.status(500).json({ success: false, error: err.message });
     }
 });
