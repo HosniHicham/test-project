@@ -13,6 +13,7 @@ const SUPABASE_URL = 'https://jjrisfyotyryanhbsvlz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_t7kVxzmOtz16C95U_B52FA_AJl_WK-h';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// مسار إضافة عقار جديد مع الوسائط
 app.post('/api/add-idea', upload.single('media'), async (req, res) => {
     try {
         const { idea } = req.body;
@@ -44,16 +45,34 @@ app.post('/api/add-idea', upload.single('media'), async (req, res) => {
         if (dbError) return res.status(400).json({ success: false, error: dbError.message });
 
         res.json({ success: true, message: 'تم حفظ العقار بنجاح!' });
-    } catch (err) { // تم تصحيحها من elsif إلى catch
+    } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
+// مسار جلب العقارات المسجلة
 app.get('/api/get-ideas', async (req, res) => {
     try {
         const { data, error } = await supabase.from('test_messages').select('*');
         if (error) return res.status(400).json({ success: false, error: error.message });
         res.json({ success: true, ideas: data });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// مسار حذف عقار بناءً على الـ ID
+app.delete('/api/delete-idea/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase
+            .from('test_messages')
+            .delete()
+            .eq('id', id);
+
+        if (error) return res.status(400).json({ success: false, error: error.message });
+
+        res.json({ success: true, message: 'تم حذف العقار بنجاح!' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
